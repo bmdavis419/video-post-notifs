@@ -11,10 +11,14 @@
 		"enabled": true
 	},
 	"triggers": {
-		"crons": [
-			"* * * * *"
-		]
-	}
+		"crons": ["* * * * *"]
+	},
+	"kv_namespaces": [
+		{
+			"binding": "KV_CHANNEL_UPLOAD_BOT",
+			"id": "2ea1d94b0a624fae8e4ad93c2201a9f8"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

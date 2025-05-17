@@ -15,6 +15,55 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { XMLParser } from 'fast-xml-parser';
+
+export interface VideoInfo {
+	id: string;
+	title: string;
+	description: string;
+}
+
+function parseLatest(xml: string): VideoInfo | null {
+	const parser = new XMLParser({
+		ignoreAttributes: false,
+		attributeNamePrefix: '@_',
+	});
+	// Parse entire feed
+	const obj = parser.parse(xml);
+	// feed.entry might be an array or a single object
+	let entries = obj.feed?.entry;
+
+	if (!entries) return null;
+	if (!Array.isArray(entries)) entries = [entries];
+	// Take the first (newest) entry
+	const e = entries[0];
+
+	// yt:videoId is either e["yt:videoId"] or e.videoId
+	const id = e['yt:videoId'] ?? e.videoId;
+
+	// title is e.title
+	const title = typeof e.title === 'object' ? e.title['#text'] : e.title;
+	// description lives under media:description or just description
+	const descObj = e['media:group']['media:description'] ?? e.description;
+	const description = typeof descObj === 'object' ? descObj['#text'] : descObj;
+
+	if (!id || !title || !description) return null;
+	return { id, title, description };
+}
+
+const getRssFeed = async () => {
+	const CHANNEL_ID = 'UCbRP3c757lWg9M-U7TyEkXA';
+
+	const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+
+	const response = await fetch(rssUrl);
+	const xml = await response.text();
+
+	const video = parseLatest(xml);
+
+	return video;
+};
+
 export default {
 	async fetch(req) {
 		const url = new URL(req.url);
@@ -26,12 +75,11 @@ export default {
 	// The scheduled handler is invoked at the interval set in our wrangler.jsonc's
 	// [[triggers]] configuration.
 	async scheduled(event, env, ctx): Promise<void> {
-		// A Cron Trigger can make requests to other endpoints on the Internet,
-		// publish to a Queue, query a D1 Database, and much more.
-		//
-		// We'll keep it simple and make an API call to a Cloudflare API:
-		let resp = await fetch('https://api.cloudflare.com/client/v4/ips');
-		let wasSuccessful = resp.ok ? 'success' : 'fail';
+		const rss = await getRssFeed();
+
+		console.log(rss);
+
+		let wasSuccessful = rss ? 'success' : 'fail';
 
 		// You could store this result in KV, write to a D1 Database, or publish to a Queue.
 		// In this template, we'll just log the result:
