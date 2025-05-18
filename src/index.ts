@@ -48,7 +48,14 @@ const getRssForVideo = async () => {
 };
 
 const prepareMessage = (video: VideoInfo) => {
-	return `New video uploaded: **${video.title}**\n\n${video.description}`;
+	const descBrandMatch = video.description.match(/https:\/\/soydev\.link\/([a-zA-Z]+)/);
+	const brand = descBrandMatch ? descBrandMatch[1] : 'no sponsor';
+
+	const videoLink = `https://youtube.com/watch?v=${video.id}`;
+
+	const emailDraft = `Just put an ad live! ${videoLink}`;
+
+	return `New video uploaded: *${video.title}*\n\nSponsor: **${brand}**\n\nVideo link: ${videoLink}\n\n**Email Draft**\n${emailDraft}`;
 };
 
 async function sendDiscordMessage(props: { message: string; env: Env }): Promise<void> {
