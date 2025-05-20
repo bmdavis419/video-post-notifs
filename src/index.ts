@@ -48,7 +48,7 @@ const getRssForVideo = async () => {
 };
 
 const prepareMessage = (video: VideoInfo) => {
-	const descBrandMatch = video.description.match(/https:\/\/soydev\.link\/([a-zA-Z]+)/);
+	const descBrandMatch = video.description.match(/https:\/\/soydev\.link\/([a-zA-Z0-9]+)/);
 	const brand = descBrandMatch ? descBrandMatch[1] : 'no sponsor';
 
 	const videoLink = `https://youtube.com/watch?v=${video.id}`;
